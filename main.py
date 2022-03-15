@@ -101,15 +101,17 @@ class Physics(MainBot):
 
     def main_physics(self):
         print('main_physics')
-        # button_list = [
-        #     [InlineKeyboardButton("Термодинамика", callback_data='ФИЗИКА(ЕГЭ)')],
-        #     [InlineKeyboardButton("Математика(олимпиады)", callback_data='МАТЕМАТИКА(олимпиады)')],
-        # ]
-        # reply_markup = InlineKeyboardMarkup(button_list)
+        button_list = [
+            [InlineKeyboardButton("Термодинамика", callback_data='ФИЗИКА(ЕГЭ)')],
+            [InlineKeyboardButton("Электричество", callback_data='МАТЕМАТИКА(олимпиады)')],
+            [InlineKeyboardButton("Механика", callback_data='МАТЕМАТИКА(олимпиады)')],
+            [InlineKeyboardButton("МКТ", callback_data='МАТЕМАТИКА(олимпиады)')],
+            [InlineKeyboardButton("Гидродинамика", callback_data='МАТЕМАТИКА(олимпиады)')]
+        ]
+        reply_markup = InlineKeyboardMarkup(button_list)
         # # отправка клавиатуры в чат
-        # self.bot
-        # self.bot.sendMessage.reply_text(text="Меню из двух столбцов", reply_markup=reply_markup)
         self.bot.sendMessage(chat_id=self.chat_id, text='GG')
+        self.bot.sendMessage(chat_id=self.chat_id, text="Тестовое_меню_разделов", reply_markup=reply_markup)
 
 
 if __name__ == '__main__':
