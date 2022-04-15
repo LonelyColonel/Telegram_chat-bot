@@ -1,9 +1,11 @@
 import logging
-import telegram
-from telegram.ext import Updater, MessageHandler, Filters
-from telegram.ext import CallbackContext, CommandHandler, CallbackQueryHandler, ChosenInlineResultHandler
-from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from telegram.ext import MessageHandler, Filters
+from telegram.ext import CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from main_class import MainBot
+from data import db_session
+from data.physics_tasks import PhysicsTasks
+import json
 
 
 class Physics(MainBot):
@@ -12,6 +14,7 @@ class Physics(MainBot):
         self.bot = bot
         self.chat_id = chat_id
         self.dp = dp
+        self.now_task = ''
 
     def main_physics(self):
         self.dp.add_handler(CallbackQueryHandler(self.physics_numbers, pattern='NUMBERS'))
@@ -40,159 +43,654 @@ class Physics(MainBot):
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Разделы')
 
     def physics_numbers(self, update, _):
-        self.dp.add_handler(CallbackQueryHandler(self.one, pattern='1T'))
-        self.dp.add_handler(CallbackQueryHandler(self.two, pattern='2T'))
-        self.dp.add_handler(CallbackQueryHandler(self.three, pattern='3T'))
-        self.dp.add_handler(CallbackQueryHandler(self.four, pattern='4T'))
-        self.dp.add_handler(CallbackQueryHandler(self.five, pattern='5T'))
-        self.dp.add_handler(CallbackQueryHandler(self.six, pattern='6T'))
-        self.dp.add_handler(CallbackQueryHandler(self.seven, pattern='7T'))
-        self.dp.add_handler(CallbackQueryHandler(self.eight, pattern='8T'))
-        self.dp.add_handler(CallbackQueryHandler(self.nine, pattern='9T'))
-        self.dp.add_handler(CallbackQueryHandler(self.ten, pattern='10T'))
-        self.dp.add_handler(CallbackQueryHandler(self.eleven, pattern='11T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twelve, pattern='12T'))
-        self.dp.add_handler(CallbackQueryHandler(self.thirteen, pattern='13T'))
-        self.dp.add_handler(CallbackQueryHandler(self.fourteen, pattern='14T'))
-        self.dp.add_handler(CallbackQueryHandler(self.fifteen, pattern='15T'))
-        self.dp.add_handler(CallbackQueryHandler(self.sixteen, pattern='16T'))
-        self.dp.add_handler(CallbackQueryHandler(self.seventeen, pattern='17T'))
-        self.dp.add_handler(CallbackQueryHandler(self.eighteen, pattern='18T'))
-        self.dp.add_handler(CallbackQueryHandler(self.nineteen, pattern='19T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty, pattern='20T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_one, pattern='21T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_two, pattern='22T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_three, pattern='23T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_four, pattern='24T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_five, pattern='25T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_six, pattern='26T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_seven, pattern='27T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_eight, pattern='28T'))
-        self.dp.add_handler(CallbackQueryHandler(self.twenty_nine, pattern='29T'))
-        self.dp.add_handler(CallbackQueryHandler(self.thirty, pattern='30T'))
-        button_list = [[InlineKeyboardButton('1', callback_data='1T'), InlineKeyboardButton('2', callback_data='2T'),
-                        InlineKeyboardButton('3', callback_data='3T'), InlineKeyboardButton('4', callback_data='4T'),
-                        InlineKeyboardButton('5', callback_data='5T')],
-                       [InlineKeyboardButton('6', callback_data='6T'), InlineKeyboardButton('7', callback_data='7T'),
-                        InlineKeyboardButton('8', callback_data='8T'), InlineKeyboardButton('9', callback_data='9T'),
-                        InlineKeyboardButton('10', callback_data='10T')],
-                       [InlineKeyboardButton('11', callback_data='11T'), InlineKeyboardButton('12', callback_data='12T'),
-                        InlineKeyboardButton('13', callback_data='13T'), InlineKeyboardButton('14', callback_data='14T'),
-                        InlineKeyboardButton('15', callback_data='15T')],
-                       [InlineKeyboardButton('16', callback_data='16T'), InlineKeyboardButton('17', callback_data='17T'),
-                        InlineKeyboardButton('18', callback_data='18T'), InlineKeyboardButton('19', callback_data='19T'),
-                        InlineKeyboardButton('20', callback_data='20T')],
-                       [InlineKeyboardButton('21', callback_data='21T'), InlineKeyboardButton('22', callback_data='22T'),
-                        InlineKeyboardButton('23', callback_data='23T'), InlineKeyboardButton('24', callback_data='24T'),
-                        InlineKeyboardButton('25', callback_data='25T')],
-                       [InlineKeyboardButton('26', callback_data='26T'), InlineKeyboardButton('27', callback_data='27T'),
-                        InlineKeyboardButton('28', callback_data='28T'), InlineKeyboardButton('29', callback_data='29T'),
-                        InlineKeyboardButton('30', callback_data='30T')],
+        button_list = [[InlineKeyboardButton('1', callback_data='ONE'), InlineKeyboardButton('2', callback_data='TWO'),
+                        InlineKeyboardButton('3', callback_data='THREE'),
+                        InlineKeyboardButton('4', callback_data='FOUR'),
+                        InlineKeyboardButton('5', callback_data='FIVE')],
+                       [InlineKeyboardButton('6', callback_data='SIX'),
+                        InlineKeyboardButton('7', callback_data='SEVEN'),
+                        InlineKeyboardButton('8', callback_data='EIGHT'),
+                        InlineKeyboardButton('9', callback_data='NINE'),
+                        InlineKeyboardButton('10', callback_data='TEN')],
+                       [InlineKeyboardButton('11', callback_data='ELEVEN'),
+                        InlineKeyboardButton('12', callback_data='TWELVE'),
+                        InlineKeyboardButton('13', callback_data='THIRTEEN'),
+                        InlineKeyboardButton('14', callback_data='FOURTEEN'),
+                        InlineKeyboardButton('15', callback_data='FIFTEEN')],
+                       [InlineKeyboardButton('16', callback_data='SIXTEEN'),
+                        InlineKeyboardButton('17', callback_data='SEVENTEEN'),
+                        InlineKeyboardButton('18', callback_data='EIGHTEEN'),
+                        InlineKeyboardButton('19', callback_data='NINETEEN'),
+                        InlineKeyboardButton('20', callback_data='TWENTY')],
+                       [InlineKeyboardButton('21', callback_data='TWONE'),
+                        InlineKeyboardButton('22', callback_data='TWTWO'),
+                        InlineKeyboardButton('23', callback_data='TWTHREE'),
+                        InlineKeyboardButton('24', callback_data='TWFOUR'),
+                        InlineKeyboardButton('25', callback_data='TWFIVE')],
+                       [InlineKeyboardButton('26', callback_data='TWSIX'),
+                        InlineKeyboardButton('27', callback_data='TWSEVEN'),
+                        InlineKeyboardButton('28', callback_data='TWEIGHT'),
+                        InlineKeyboardButton('29', callback_data='TWNINE'),
+                        InlineKeyboardButton('30', callback_data='THIRTY')],
                        ]
+
+        self.dp.add_handler(CallbackQueryHandler(self.one, pattern='ONE'))
+        self.dp.add_handler(CallbackQueryHandler(self.two, pattern='TWO'))
+        self.dp.add_handler(CallbackQueryHandler(self.three, pattern='THREE'))
+        self.dp.add_handler(CallbackQueryHandler(self.four, pattern='FOUR'))
+        self.dp.add_handler(CallbackQueryHandler(self.five, pattern='FIVE'))
+        self.dp.add_handler(CallbackQueryHandler(self.six, pattern='SIX'))
+        self.dp.add_handler(CallbackQueryHandler(self.seven, pattern='SEVEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.eight, pattern='EIGHT'))
+        self.dp.add_handler(CallbackQueryHandler(self.nine, pattern='NINE'))
+        self.dp.add_handler(CallbackQueryHandler(self.ten, pattern='TEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.eleven, pattern='ELEVEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.twelve, pattern='TWELVE'))
+        self.dp.add_handler(CallbackQueryHandler(self.thirteen, pattern='THIRTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.fourteen, pattern='FOURTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.fifteen, pattern='FIFTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.sixteen, pattern='SIXTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.seventeen, pattern='SEVENTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.eighteen, pattern='EIGHTEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.nineteen, pattern='NINETEEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty, pattern='TWENTY'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_one, pattern='TWONE'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_two, pattern='TWTWO'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_three, pattern='TWTHREE'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_four, pattern='TWFOUR'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_five, pattern='TWFIVE'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_six, pattern='TWSIX'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_seven, pattern='TWSEVEN'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_eight, pattern='TWEIGHT'))
+        self.dp.add_handler(CallbackQueryHandler(self.twenty_nine, pattern='TWNINE'))
+        self.dp.add_handler(CallbackQueryHandler(self.thirty, pattern='THIRTY'))
         reply_markup = InlineKeyboardMarkup(button_list)
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Номера')
 
     def meh(self, update, _):
-        pass
+        self.now_task = 'Mechanics'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, True)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def mkt(self, update, _):
-        pass
+        self.now_task = 'MKT and thermodynamics'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, True)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eld(self, update, _):
-        pass
+        self.now_task = 'Electrodynamics'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, True)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def opt(self, update, _):
-        pass
+        self.now_task = 'Optics'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, True)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def kva(self, update, _):
-        pass
+        self.now_task = 'Quantum physics'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, True)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def one(self, update, _):
-        pass
+        self.now_task = '1'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def two(self, update, _):
-        pass
+        self.now_task = '2'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def three(self, update, _):
-        pass
+        self.now_task = '3'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def four(self, update, _):
-        pass
+        self.now_task = '4'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def five(self, update, _):
-        pass
+        self.now_task = '5'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def six(self, update, _):
-        pass
+        self.now_task = '6'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def seven(self, update, _):
-        pass
+        self.now_task = '7'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eight(self, update, _):
-        pass
+        self.now_task = '8'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def nine(self, update, _):
-        pass
+        self.now_task = '9'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def ten(self, update, _):
-        pass
+        self.now_task = '10'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eleven(self, update, _):
-        pass
+        self.now_task = '11'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twelve(self, update, _):
-        pass
+        self.now_task = '12'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def thirteen(self, update, _):
-        pass
+        self.now_task = '13'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def fourteen(self, update, _):
-        pass
+        self.now_task = '14'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def fifteen(self, update, _):
-        pass
+        self.now_task = '15'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def sixteen(self, update, _):
-        pass
+        self.now_task = '16'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def seventeen(self, update, _):
-        pass
+        self.now_task = '17'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eighteen(self, update, _):
-        pass
+        self.now_task = '18'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def nineteen(self, update, _):
-        pass
+        self.now_task = '19'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty(self, update, _):
-        pass
+        self.now_task = '20'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_one(self, update, _):
-        pass
+        self.now_task = '21'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_two(self, update, _):
-        pass
+        self.now_task = '22'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_three(self, update, _):
-        pass
+        self.now_task = '23'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_four(self, update, _):
-        pass
+        self.now_task = '24'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_five(self, update, _):
-        pass
+        self.now_task = '25'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_six(self, update, _):
-        pass
+        self.now_task = '26'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_seven(self, update, _):
-        pass
+        self.now_task = '27'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_eight(self, update, _):
-        pass
+        self.now_task = '28'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_nine(self, update, _):
-        pass
+        self.now_task = '29'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def thirty(self, update, _):
-        pass
+        self.now_task = '30'
+        db_session.global_init("db/bot_db.db")
+        session = db_session.create_session()
+        self.db_task = self.open_document(session, self.now_task, False)
+        if self.db_task == '-END-':
+            self.bot.sendMessage(chat_id=self.chat_id, text='Новых заданий больше нет!')
+        else:
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].way_physics, 'rb'))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Отправьте ответ')
+            self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
+
+    def open_document(self, session, them, is_them):
+        with open('Json_data/' + str(self.chat_id) + '.json') as file:
+            data = json.load(file)
+        if data[0][them][0]['lvl'] < 5:
+            dif = 'Л'
+        elif 10 > data[0][them][0]['lvl'] > 5:
+            dif = 'С'
+        else:
+            dif = 'Т'
+        tasks_list = []
+        if is_them:
+            for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                        PhysicsTasks.id_physics_tasks.notin_(data[0]['completed']),
+                                                        PhysicsTasks.id_physics_tasks.notin_(data[0]['failed']),
+                                                        PhysicsTasks.difficulty_physics == dif):
+                tasks_list.append(i)
+            if not tasks_list:
+                for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                            PhysicsTasks.id_physics_tasks.notin_(data[0]['completed']),
+                                                            PhysicsTasks.difficulty_physics == dif):
+                    tasks_list.append(i)
+                if not tasks_list:
+                    if dif == 'Т':
+                        for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['completed']),
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['failed']),
+                                                                    PhysicsTasks.difficulty_physics == 'С'):
+                            tasks_list.append(i)
+                        if not tasks_list:
+                            for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                                        PhysicsTasks.id_physics_tasks.notin_(
+                                                                            data[0]['completed']),
+                                                                        PhysicsTasks.difficulty_physics == 'С'):
+                                tasks_list.append(i)
+                                if not tasks_list:
+                                    for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                                                PhysicsTasks.id_physics_tasks.notin_(
+                                                                                    data[0]['completed']),
+                                                                                PhysicsTasks.id_physics_tasks.notin_(
+                                                                                    data[0]['failed']),
+                                                                                PhysicsTasks.difficulty_physics == 'Л'):
+                                        tasks_list.append(i)
+                                        if not tasks_list:
+                                            for i in session.query(PhysicsTasks).filter(
+                                                    PhysicsTasks.theme_physics == f'{them}',
+                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                        data[0]['completed']),
+                                                    PhysicsTasks.difficulty_physics == 'Л'):
+                                                tasks_list.append(i)
+                                            if not tasks_list:
+                                                file.close()
+                                                return '-END-'
+                    elif dif == 'С':
+                        for i in session.query(PhysicsTasks).filter(PhysicsTasks.theme_physics == f'{them}',
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['completed']),
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['failed']),
+                                                                    PhysicsTasks.difficulty_physics == 'Л'):
+                            tasks_list.append(i)
+                            if not tasks_list:
+                                for i in session.query(PhysicsTasks).filter(
+                                        PhysicsTasks.theme_physics == f'{them}',
+                                        PhysicsTasks.id_physics_tasks.notin_(
+                                            data[0]['completed']),
+                                        PhysicsTasks.difficulty_physics == 'Л'):
+                                    tasks_list.append(i)
+                                if not tasks_list:
+                                    file.close()
+                                    return '-END-'
+                    else:
+                        file.close()
+                        return '-END-'
+        else:
+            for i in session.query(PhysicsTasks).filter(PhysicsTasks.number_physics == f'{them}',
+                                                        PhysicsTasks.id_physics_tasks.notin_(data[0]['completed']),
+                                                        PhysicsTasks.id_physics_tasks.notin_(data[0]['failed']),
+                                                        PhysicsTasks.difficulty_physics == dif):
+                tasks_list.append(i)
+            if not tasks_list:
+                for i in session.query(PhysicsTasks).filter(PhysicsTasks.number_physics == f'{them}',
+                                                            PhysicsTasks.id_physics_tasks.notin_(data[0]['completed']),
+                                                            PhysicsTasks.difficulty_physics == dif):
+                    tasks_list.append(i)
+                if not tasks_list:
+                    if dif == 'Т':
+                        for i in session.query(PhysicsTasks).filter(PhysicsTasks.number_physics == f'{them}',
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['completed']),
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['failed']),
+                                                                    PhysicsTasks.difficulty_physics == 'С'):
+                            tasks_list.append(i)
+                        if not tasks_list:
+                            for i in session.query(PhysicsTasks).filter(PhysicsTasks.number_physics == f'{them}',
+                                                                        PhysicsTasks.id_physics_tasks.notin_(
+                                                                            data[0]['completed']),
+                                                                        PhysicsTasks.difficulty_physics == 'С'):
+                                tasks_list.append(i)
+                                if not tasks_list:
+                                    for i in session.query(PhysicsTasks).filter(PhysicsTasks.themnumber_physicse_physics
+                                                                                == f'{them}',
+                                                                                PhysicsTasks.id_physics_tasks.notin_(
+                                                                                    data[0]['completed']),
+                                                                                PhysicsTasks.id_physics_tasks.notin_(
+                                                                                    data[0]['failed']),
+                                                                                PhysicsTasks.difficulty_physics == 'Л'):
+                                        tasks_list.append(i)
+                                        if not tasks_list:
+                                            for i in session.query(PhysicsTasks).filter(
+                                                    PhysicsTasks.number_physics == f'{them}',
+                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                        data[0]['completed']),
+                                                    PhysicsTasks.difficulty_physics == 'Л'):
+                                                tasks_list.append(i)
+                                            if not tasks_list:
+                                                file.close()
+                                                return '-END-'
+                    elif dif == 'С':
+                        for i in session.query(PhysicsTasks).filter(PhysicsTasks.number_physics == f'{them}',
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['completed']),
+                                                                    PhysicsTasks.id_physics_tasks.notin_(
+                                                                        data[0]['failed']),
+                                                                    PhysicsTasks.difficulty_physics == 'Л'):
+                            tasks_list.append(i)
+                            if not tasks_list:
+                                for i in session.query(PhysicsTasks).filter(
+                                        PhysicsTasks.number_physics == f'{them}',
+                                        PhysicsTasks.id_physics_tasks.notin_(
+                                            data[0]['completed']),
+                                        PhysicsTasks.difficulty_physics == 'Л'):
+                                    tasks_list.append(i)
+                                if not tasks_list:
+                                    file.close()
+                                    return '-END-'
+                    else:
+                        file.close()
+                        return '-END-'
+        file.close()
+        return tasks_list
+
+    def answer_check(self, update, _):
+        answer = update.message.text
+        self.dp.handlers[1].clear()
+        if answer in ['Разделы', 'Помощь/О боте', 'Обратная связь']:
+            return
+        with open('Json_data/' + str(self.chat_id) + '.json') as file:
+            data = json.load(file)
+        if answer == self.db_task[0].answer_physics:
+            data[0]['completed'].append(int(self.db_task[0].id_physics_tasks))
+            if int(self.db_task[0].id_physics_tasks) in data[0]['failed']:
+                data[0]['failed'].remove(int(self.db_task[0].id_physics_tasks))
+            data[0][self.now_task][0]['lvl'] += 1
+            self.bot.sendMessage(chat_id=self.chat_id, text='Ответ правильный!')
+        else:
+            data[0]['failed'].append(int(self.db_task[0].id_physics_tasks))
+            self.bot.sendMessage(chat_id=self.chat_id, text='Ответ неправильный!')
+            self.bot.sendDocument(chat_id=self.chat_id, document=open(self.db_task[0].solution_physics, 'rb'))
+        file.close()
+        with open('Json_data/' + str(self.chat_id) + '.json', mode='w') as file:
+            json.dump(data, file)
+            file.close()
+        self.db_task.clear()
+

@@ -1,8 +1,7 @@
 import logging
-import telegram
-from telegram.ext import Updater, MessageHandler, Filters
-from telegram.ext import CallbackContext, CommandHandler, CallbackQueryHandler, ChosenInlineResultHandler
-from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, User
+from telegram.ext import MessageHandler, Filters
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from data import db_session
 from main_class import MainBot
 from PIL import Image
@@ -76,14 +75,13 @@ class Admin(MainBot):
                                                             'тему в которую мне записать задание.'
                                                             '(вводить: превая буква большая, остальные маленькие) \n'
                                                             'Все темы: \n'
-                                                            '1)Механика\n'
-                                                            '2)МКТ и термодинамика\n'
-                                                            '3)Электродинамика\n'
-                                                            '4)Оптика\n'
-                                                            '5)Квантовая физика\n')
-            self.dp.add_handler(MessageHandler(Filters.text('Механика' or 'МКТ и термодинамика' or
-                                                            'Электродинамика' or 'Оптика'
-                                                            or 'Квантовая физика'), self.get_under_theme))
+                                                            '1)Mechanics\n'
+                                                            '2)MKT and thermodynamics\n'
+                                                            '3)Electrodynamics\n'
+                                                            '4)Optics\n'
+                                                            '5)Quantum physics\n')
+            text = '^(Mechanics|MKT and thermodynamics|Electrodynamics|Optics|Quantum physics)$'
+            self.dp.add_handler(MessageHandler(Filters.text(text), self.get_under_theme))
 
     def get_under_theme(self, update, _):
         if self.subj == 'M':
@@ -92,33 +90,95 @@ class Admin(MainBot):
             self.bot.sendMessage(chat_id=self.chat_id, text=f'Выбрано: {self.theme_maths}. Теперь выберите подтему.\n'
                                                             f'Подтемы:\n'
                                                             f'Тригонометрия:\n'
-                                                            f'1)TRIGONOMETRY_EQUATIONS(Триг. ур-ия)\n'
-                                                            f'2)Сведение к кв-ым триг. ур-ям\n'
-                                                            f'3)Однородные ур-ия\n'
-                                                            f'4)Системы триг. уравнений\n'
-                                                            f'5)Преобразование триг. уравнений\n'
-                                                            f'6)Обратные триг. функции\n'
-                                                            f'7)Метод вспомогательного угла в триг.\n')
-            self.dp.add_handler(MessageHandler(Filters.text('^(TRIGONOMETRY_EQUATIONS|Сведение к кв-ым триг. ур-ям|'
-                                                            'Однородные ур-ия|Системы триг. уравнений|'
-                                                            'Преобразование триг. уравнений|Обратные триг. функции|'
-                                                            'Метод вспомогательного угла в триг.)$'),
+                                                            f'1)TRIGONOMETRY_EQUATIONS (Триг. ур-ия)\n'
+                                                            f'2)SQUARE_EQUATIONS (Сведение к кв-ым триг. ур-ям)\n'
+                                                            f'3)SINGLE_TRIGONOMETRY (Однородные ур-ия)\n'
+                                                            f'4)TRIGONOMETRY_SYSTEM (Системы триг. уравнений)\n'
+                                                            f'5)TRANSFORMATIONS (Преобразование триг. уравнений)\n'
+                                                            f'6)INVERSE_FUNCTIONS (Обратные триг. функции)\n'
+                                                            f'7)SUPPORT_ANGLE (Метод вспомогательного угла в триг.)\n'
+                                                            f'Уравнения и неравенства:\n'
+                                                            f'1)MODULO_EQUATIONS(Уравнения и неравенства с модулем)\n'
+                                                            f'2)RATIONAL_EQUATIONS(Рациональные уравнения и '
+                                                            f'неравенства)\n'
+                                                            f'3)EQUATIONS_WITH_RADICALS(Уравнения и неравенства с '
+                                                            f'радикалами)\n'
+                                                            f'4)EXPONENTIAL_EQUATIONS(Показательные уравнения)\n'
+                                                            f'5)LOGARITHMIC_EQUATIONS(Логарифмические уравнения)\n'
+                                                            f'6)MIXED_TRIGONOMETRY(Смешанная тригонометрия)\n'
+                                                            f'7)MIXED_EQUATIONS(Смешанные уравнения)\n'
+                                                            f'Алгебраические системы:\n'
+                                                            f'1)SIMPLE_EQUATION_SYSTEMS(Простые системы уравнений)\n'
+                                                            f'2)SQUARE_EQUATIONS(Сложные системы уравнений)\n'
+                                                            f'3)ARISING_FROM_TEXT_TASKS(Возникающие из текстовых '
+                                                            f'задач)\n'
+                                                            f'Текстовые задачи:\n'
+                                                            f'1)MOVEMENT_TASKS(Задачи на движение)\n'
+                                                            f'2)TASKS_FOR_WORK(Задачи на работу)\n'
+                                                            f'3)TASKS_ON_MIXTURES(Задачи на смеси)\n'
+                                                            f'4)PROGRESSION_TASKS(Задачи на прогрессии)\n'
+                                                            f'5)OPTIMAL_CHOICE(Оптимальный выбор и целые числа)\n'
+                                                            f'Параметры:\n'
+                                                            f'1)SQUARE_EQ_NERVES_PARAMETER(Квадратные ур-ия и нер-ва с '
+                                                            f'параметром)\n'
+                                                            f'2)LOGICAL_TASKS(Логические задачи)\n'
+                                                            f'3)DIFFICULT_LOG_TASKS(Сложные логические задачи)\n'
+                                                            f'4)WITH_ROOTS(Параметры с корнями)\n'
+                                                            f'Планиметрия:\n'
+                                                            f'1)COMMON_TRIANGLES(Общие треугольники)\n'
+                                                            f'2)SEMBLANCE(Подобие)\n'
+                                                            f'3)SQUARES(Площади)\n'
+                                                            f'4)PARALLEL_TRAPEZOIDS(Параллелограммы и трапеции)\n'
+                                                            f'5)CIRCLES(Окружности)\n'
+                                                            f'6)BUILDINGS(Построения)\n'
+                                                            f'Стереометрия:\n'
+                                                            f'1)()\n'
+                                                            f'2)()\n'
+                                                            f'3)()\n'
+                                                            f'4)()\n'
+                                                            f'5)()\n'
+                                                            f'6)()\n'
+                                                            f'Из вариантов олимпиад прошлых лет:\n'
+                                                            f'1)PHYSTECH(Физтех)\n'
+                                                            f'2)OMMO(ОММО)\n'
+                                                            f'3)PVG(ПВГ)\n'
+                                                            f'4)LOMONOSOV(Ломоносов)\n'
+                                                            f'5)ROSATOM(Росатом)\n'
+                                                            f'6)SAMMAT(САММАТ)\n'
+                                                            f'7)GAZPROM(Газпром)\n'
+                                                            f'Нестандартные задачи:\n'
+                                                            f'1)MAJOR_METHOD(Метод мажорант)\n'
+                                                            f'2)FUNCTIONS(Использование св-в функций)\n'
+                                                            f'3)GROUPING(Подстановка или группировка)\n'
+                                                            f'4)GEOMETRIC_APPROACH(Геометрический подход)')
+            self.dp.add_handler(MessageHandler(Filters.text('^(TRIGONOMETRY_EQUATIONS|SQUARE_EQUATIONS|'
+                                                            'SINGLE_TRIGONOMETRY|TRIGONOMETRY_SYSTEM|'
+                                                            'TRANSFORMATIONS|INVERSE_FUNCTIONS|'
+                                                            'SUPPORT_ANGLE|MODULO_EQUATIONS|RATIONAL_EQUATIONS|'
+                                                            'EQUATIONS_WITH_RADICALS|EXPONENTIAL_EQUATIONS|'
+                                                            'LOGARITHMIC_EQUATIONS|MIXED_TRIGONOMETRY|'
+                                                            'MIXED_EQUATIONS|SIMPLE_EQUATION_SYSTEMS|SQUARE_EQUATIONS|'
+                                                            'ARISING_FROM_TEXT_TASKS|MOVEMENT_TASKS|'
+                                                            'TASKS_FOR_WORK|TASKS_ON_MIXTURES|'
+                                                            'PROGRESSION_TASKS|OPTIMAL_CHOICE|'
+                                                            'SQUARE_EQ_NERVES_PARAMETER|'
+                                                            'LOGICAL_TASKS|DIFFICULT_LOG_TASKS|'
+                                                            'WITH_ROOTS|COMMON_TRIANGLES|'
+                                                            'SEMBLANCE|SQUARES|PARALLEL_TRAPEZOIDS|'
+                                                            'CIRCLES|BUILDINGS|'
+                                                            'PHYSTECH|OMMO|'
+                                                            'PVG|LOMONOSOV|ROSATOM|'
+                                                            'SAMMAT|GAZPROM|'
+                                                            'MAJOR_METHOD|FUNCTIONS|'
+                                                            'GROUPING|GEOMETRIC_APPROACH)$'),
                                                self.get_difficulty))
         elif self.subj == 'P':
             self.theme_physics = update.message.text
             self.dictionary_physics['theme_physics'] = self.theme_physics
             self.bot.sendMessage(chat_id=self.chat_id, text=f'Выбрано: {self.theme_physics}. Теперь выберите номер.\n'
-                                                            f'число от 1-30 + _ + слово "номер". Например: 1_номер')
-
-            self.dp.add_handler(MessageHandler(Filters.text('1_номер' or '2_номер' or '3_номер' or '4_номер'
-                                                            or '5_номер' or '6_номер' or '7_номер' or '8_номер' or
-                                                            '9_номер' or '10_номер' or '11_номер' or '12_номер' or
-                                                            '13_номер' or '14_номер' or '15_номер' or
-                                                            '16_номер' or '17_номер' or '18_номер' or '19_номер' or
-                                                            '20_номер' or '21_номер' or '22_номер' or '23_номер' or
-                                                            '24_номер' or '25_номер' or
-                                                            '26_номер' or '27_номер' or '28_номер' or '29_номер' or
-                                                            '30_номер'), self.get_difficulty))
+                                                            f'число от 1-30')
+            text = '^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)$'
+            self.dp.add_handler(MessageHandler(Filters.text(text), self.get_difficulty))
 
     def get_difficulty(self, update, _):
         undertheme = update.message.text
@@ -144,10 +204,8 @@ class Admin(MainBot):
         photo.save(new_way + '.jpeg', format='jpeg', quality=50)
 
     def get_photo_handler_func(self, update, context):
-        # print(update.message)
         file = update.message.document.file_id
         filename = update.message.document.file_name
-        # print(filename)
         obj = context.bot.get_file(file)
         obj.download('tasks/' + filename)
 
@@ -159,7 +217,6 @@ class Admin(MainBot):
         self.dictionary_physics['way_physics'] = 'tasks/' + filename
         self.bot.sendMessage(chat_id=self.chat_id, text='Теперь пришли мне '
                                                         'ответ на это задание')
-        # print(self.dp.handlers)
         self.dp.handlers[1].clear()
         self.dp.add_handler(MessageHandler(Filters.text, self.get_answer_func), group=1)
 
@@ -212,16 +269,11 @@ class Admin(MainBot):
             session.commit()
         self.bot.sendMessage(chat_id=self.chat_id, text='Успешно добавлено в базу данных!')
 
-        # print(self.dictionary_maths)
-        # print(self.dictionary_physics)
-
     def for_see_lastest_addition_maths(self, update, _):
         try:
             db_session.global_init("db/bot_db.db")
             session = db_session.create_session()
             text_temp = session.query(MathsTasks).all()[-1]
-            print(type(text_temp))
-            print(session.query(MathsTasks).all()[-1])
             self.bot.sendMessage(chat_id=self.chat_id, text=str(text_temp))
         except IndexError:
             self.bot.sendMessage(chat_id=self.chat_id, text='В базе данных нет ни одного задания по математике')
@@ -231,8 +283,6 @@ class Admin(MainBot):
             db_session.global_init("db/bot_db.db")
             session = db_session.create_session()
             text_temp = session.query(PhysicsTasks).all()[-1]
-            print(type(text_temp))
-            print(session.query(PhysicsTasks).all()[-1])
             self.bot.sendMessage(chat_id=self.chat_id, text=str(text_temp))
         except IndexError:
             self.bot.sendMessage(chat_id=self.chat_id, text='В базе данных нет ни одного задания по физике')

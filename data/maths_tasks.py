@@ -7,7 +7,6 @@ class MathsTasks(SqlAlchemyBase):
     __tablename__ = 'maths_tasks'
 
     id_maths_tasks = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    # number_tasks_maths = sqlalchemy.Column(sqlalchemy.Integer, nullable=False, index=True)
     theme_maths = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     undertheme_maths = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     difficulty_maths = sqlalchemy.Column(sqlalchemy.String, nullable=False)

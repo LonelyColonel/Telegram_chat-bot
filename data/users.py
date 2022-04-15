@@ -12,7 +12,6 @@ class BotUser(SqlAlchemyBase):
     chat_id_with_user = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     first_name_user = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     last_name_user = sqlalchemy.Column(sqlalchemy.String)
-    # unresolved_maths = sqlalchemy.Column(sqlalchemy.Integer)
     created_date = sqlalchemy.Column(sqlalchemy.DateTime,
                                      default=datetime.datetime.now)
 
