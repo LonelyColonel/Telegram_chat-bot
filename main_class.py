@@ -100,15 +100,14 @@ class MainBot:
         with open(f'Json_data/{chat_id}.json', 'r') as file:
             slovar = json.load(file)
             file.close()
+        spisok = []
         if variant == 'Maths_statistics':
-            spisok = []
-            if not slovar[1]["completed_maths"]:
-                spisok.append(f'Правильно решённых задач: 0')
-                if not slovar[1]['failed_maths']:
-                    spisok.append(f'Неправильно решённых задач: 0')
-            else:
-                spisok.append(f"Правильно решённых задач: {len(slovar[1]['completed_maths'])}")
-                spisok.append(f'Неправильно решённых задач: {len(slovar[1]["failed_maths"])}')
+            spisok.append(f"Правильно решённых задач: {len(slovar[1]['completed_maths'])}")
+            spisok.append(f'Неправильно решённых задач: {len(slovar[1]["failed_maths"])}')
+            self.bot.sendMessage(chat_id=chat_id, text=spisok[0] + '\n' + spisok[1])
+        else:
+            spisok.append(f"Правильно решённых задач: {len(slovar[0]['completed'])}")
+            spisok.append(f'Неправильно решённых задач: {len(slovar[0]["failed"])}')
             self.bot.sendMessage(chat_id=chat_id, text=spisok[0] + '\n' + spisok[1])
 
     def sections(self, update, context):
@@ -141,6 +140,10 @@ class MainBot:
             admin_list_file.close()
         if update.message.chat.username in admin_list:
             from admin_class import Admin
+            logging.info(f'Пользователь: id: {self.chat_id}, username: {update.message.chat.username}, '
+                         f'first_name_user: {update.message.chat.first_name}, '
+                         f'last_name_user: {update.message.chat.last_name}'
+                         f'Вошёл в режим администратора')
             update.message.reply_text('Приветствую хозяин, теперь ты дома.')
             self.work_class = Admin(self.token, self.bot, update.message.chat.id, self.dp)
             self.work_class.admin_main()
