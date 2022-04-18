@@ -16,5 +16,5 @@ class BotUser(SqlAlchemyBase):
                                      default=datetime.datetime.now)
 
     def __repr__(self):
-        return f'<BotUser>-{self.id_username}'
+        return f'{self.id_username}'
 

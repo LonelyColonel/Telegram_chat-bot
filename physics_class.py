@@ -8,8 +8,9 @@ from data.physics_tasks import PhysicsTasks
 import json
 
 
+# класс для физики (писал Миша)
 class Physics(MainBot):
-    def __init__(self, token, bot, chat_id, dp):
+    def __init__(self, token, chat_id, dp, bot):
         super().__init__(token)
         self.bot = bot
         self.chat_id = chat_id
@@ -27,6 +28,7 @@ class Physics(MainBot):
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Номера/Темы')
 
     def physics_themes(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.dp.add_handler(CallbackQueryHandler(self.meh, pattern='MEH'))
         self.dp.add_handler(CallbackQueryHandler(self.mkt, pattern='MKT'))
         self.dp.add_handler(CallbackQueryHandler(self.eld, pattern='EL'))
@@ -43,6 +45,7 @@ class Physics(MainBot):
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Разделы')
 
     def physics_numbers(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         button_list = [[InlineKeyboardButton('1', callback_data='ONE'), InlineKeyboardButton('2', callback_data='TWO'),
                         InlineKeyboardButton('3', callback_data='THREE'),
                         InlineKeyboardButton('4', callback_data='FOUR'),
@@ -108,6 +111,7 @@ class Physics(MainBot):
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Номера')
 
     def meh(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = 'Mechanics'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -120,6 +124,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def mkt(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = 'MKT and thermodynamics'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -132,6 +137,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eld(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = 'Electrodynamics'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -144,6 +150,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def opt(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = 'Optics'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -156,6 +163,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def kva(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = 'Quantum physics'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -168,6 +176,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def one(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '1'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -180,6 +189,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def two(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '2'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -192,6 +202,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def three(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '3'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -204,6 +215,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def four(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '4'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -216,6 +228,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def five(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '5'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -228,6 +241,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def six(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '6'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -240,6 +254,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def seven(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '7'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -252,6 +267,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eight(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '8'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -264,6 +280,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def nine(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '9'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -276,6 +293,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def ten(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '10'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -288,6 +306,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eleven(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '11'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -300,6 +319,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twelve(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '12'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -312,6 +332,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def thirteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '13'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -324,6 +345,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def fourteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '14'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -336,6 +358,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def fifteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '15'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -348,6 +371,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def sixteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '16'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -360,6 +384,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def seventeen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '17'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -372,6 +397,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def eighteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '18'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -384,6 +410,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def nineteen(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '19'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -396,6 +423,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '20'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -408,6 +436,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_one(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '21'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -420,6 +449,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_two(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '22'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -432,6 +462,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_three(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '23'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -444,6 +475,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_four(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '24'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -456,6 +488,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_five(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '25'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -468,6 +501,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_six(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '26'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -480,6 +514,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_seven(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '27'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -492,6 +527,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_eight(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '28'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -504,6 +540,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def twenty_nine(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '29'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -516,6 +553,7 @@ class Physics(MainBot):
             self.dp.add_handler(MessageHandler(Filters.text, self.answer_check), group=1)
 
     def thirty(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         self.now_task = '30'
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
@@ -672,6 +710,7 @@ class Physics(MainBot):
         return tasks_list
 
     def answer_check(self, update, _):
+        self.chat_id = update.message.chat_id
         answer = update.message.text
         self.dp.handlers[1].clear()
         if answer in ['Разделы', 'Помощь/О боте', 'Обратная связь']:

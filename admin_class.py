@@ -1,3 +1,4 @@
+# импорт необходимых модулей
 import logging
 from telegram.ext import MessageHandler, Filters
 from telegram.ext import CommandHandler, CallbackQueryHandler
@@ -7,6 +8,7 @@ from main_class import MainBot
 from PIL import Image
 from data.maths_tasks import MathsTasks
 from data.physics_tasks import PhysicsTasks
+from data.users import BotUser
 
 
 global_spisok_names = ['Тригонометрия', 'Уравнения и неравенства', 'Алгебраические системы', 'Текстовые задачи',
@@ -14,8 +16,10 @@ global_spisok_names = ['Тригонометрия', 'Уравнения и не
                        'Нестандартные задачи']
 
 
+# Admin - класс для удобного добавления новых задач, для этого администратору нужно
+# написать чат-боту команду "/admin" и следовать указаниям, наследуется от MainBot
 class Admin(MainBot):
-    def __init__(self, token, bot, chat_id, dp):
+    def __init__(self, token, chat_id, dp, bot):
         super().__init__(token)
         self.bot = bot
         self.chat_id = chat_id
@@ -37,20 +41,28 @@ class Admin(MainBot):
                                    'solution_physics': ''
                                   }
 
+    # функция для создания новых заданий
     def create_new_task(self, update, _):
+        self.chat_id = update.message.chat_id
         self.dp.add_handler(CallbackQueryHandler(self.create_tasks, pattern='PHY_ADM'))
         self.dp.add_handler(CallbackQueryHandler(self.create_tasks, pattern='MATHS_ADM'))
+        # создание кнопок под сообщением
         button_list = [
             [InlineKeyboardButton("Физика", callback_data='PHY_ADM')],
             [InlineKeyboardButton("Математика", callback_data='MATHS_ADM')]]
         reply_markup = InlineKeyboardMarkup(button_list)
+        # бот отправляет сообщение с кнопками под ним
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup,
                              text='Для какого предмета новое задание?')
 
+    # функция для получения предмета от админа
     def create_tasks(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
+        # получаем callback от нажатой кнопки
         query = update.callback_query
         variant = query.data
         query.answer()
+        # сверяемся
         if variant == 'MATHS_ADM':
             self.subj = 'M'
             self.bot.sendMessage(chat_id=self.chat_id, text='Выбрана: Математика. Теперь пришли мне '
@@ -66,6 +78,7 @@ class Admin(MainBot):
                                                             '7)STEREOMETRY(Стереометрия) \n'
                                                             '8)OTHER_VAR(Из вариантов олимпиад прошлых лет) \n'
                                                             '9)NON_STANDART(Нестандартные задачи)')
+            # регистрируем обработчики
             self.dp.add_handler(MessageHandler(Filters.regex('^(TRIGONOMETRY|EQUATIONS|SYSTEM|TEXT_TASKS|PARAMETERS|'
                                                              'PLANIMETRY|STEREOMETRY|OTHER_VAR|NON_STANDART)$'),
                                                self.get_under_theme))
@@ -81,9 +94,12 @@ class Admin(MainBot):
                                                             '4)Optics\n'
                                                             '5)Quantum physics\n')
             text = '^(Mechanics|MKT and thermodynamics|Electrodynamics|Optics|Quantum physics)$'
+            # регистрируем обработчики
             self.dp.add_handler(MessageHandler(Filters.text(text), self.get_under_theme))
 
+    # функция для получения от админа подтемы или номера (в зависимости от предмета)
     def get_under_theme(self, update, _):
+        self.chat_id = update.message.chat_id
         if self.subj == 'M':
             self.theme_maths = update.message.text
             self.dictionary_maths['theme_maths'] = self.theme_maths
@@ -180,7 +196,10 @@ class Admin(MainBot):
             text = '^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30)$'
             self.dp.add_handler(MessageHandler(Filters.text(text), self.get_difficulty))
 
+    # функция для получения сложности от админа
     def get_difficulty(self, update, _):
+        self.chat_id = update.message.chat_id
+        # получаем текст, который написал в ответ админ
         undertheme = update.message.text
         self.dictionary_maths['undertheme_maths'] = undertheme
         self.dictionary_physics['number_physics'] = undertheme
@@ -189,7 +208,9 @@ class Admin(MainBot):
                                                         f'Л - лёгкая, С - средняя, Т - тяжёлая')
         self.dp.add_handler(MessageHandler(Filters.regex('Л|С|Т'), self.get_task_photo))
 
+    # для анализа ответа админа из предыдущей функции
     def get_task_photo(self, update, _):
+        self.chat_id = update.message.chat_id
         self.difficulty = update.message.text
         self.dictionary_maths['difficulty_maths'] = self.difficulty
         self.dictionary_physics['difficulty_physics'] = self.difficulty
@@ -197,39 +218,52 @@ class Admin(MainBot):
                                                         'условие(фото)')
         self.dp.add_handler(MessageHandler(Filters.document, self.get_photo_handler_func), group=1)
 
+    # для преобразования картинки из png в jpeg
     def png_to_jpeg(self, way):
         photo = Image.open(way)
         photo = photo.convert('RGB')
         new_way = way.split('.')[0]
         photo.save(new_way + '.jpeg', format='jpeg', quality=50)
 
+    # для получения фото в виде документа.
     def get_photo_handler_func(self, update, context):
+        self.chat_id = update.message.chat_id
         file = update.message.document.file_id
         filename = update.message.document.file_name
         obj = context.bot.get_file(file)
         obj.download('tasks/' + filename)
-
+        # проверяем если загруженный админом документ(картинка) в формате png то преобразуем в jpeg
         if filename.split('.')[1] == 'png':
             self.png_to_jpeg('tasks/' + filename)
             filename = filename.split('.')[0] + '.jpeg'
 
+        # добавляем всё в словарь, данные из которого, после записи всех данных отправляются в базу данных
         self.dictionary_maths['way_maths'] = 'tasks/' + filename
         self.dictionary_physics['way_physics'] = 'tasks/' + filename
         self.bot.sendMessage(chat_id=self.chat_id, text='Теперь пришли мне '
                                                         'ответ на это задание')
+        # очищаем список обработчиков (при регистрации обработчика можно указать либо 1-ую группу, либо
+        # ничего, тогда этот обработчик по умолчанию добавляется в 0 группу, а так как в функции get_task_photo
+        # обработчик мы зарегистрировали в 1 группу, то оттуда его нужно очистить, чтобы не возникала путанница)
         self.dp.handlers[1].clear()
+        # объявляем новый обработчик
         self.dp.add_handler(MessageHandler(Filters.text, self.get_answer_func), group=1)
 
+    # анализ ответа и отправка сообщения с просьбой отправить фото с заданием
     def get_answer_func(self, update, context):
+        self.chat_id = update.message.chat_id
         self.answer = update.message.text
         self.dp.handlers[1].clear()
         self.dictionary_maths['answer_maths'] = self.answer
         self.dictionary_physics['answer_physics'] = self.answer
         self.bot.sendMessage(chat_id=self.chat_id, text='Теперь пришли мне '
                                                         'решение этого задания(фото)')
+        # объявляем новый обработчик
         self.dp.add_handler(MessageHandler(Filters.document, self.get_solution_func), group=1)
 
+    # функция для записи всех собранных данных в бд
     def get_solution_func(self, update, context):
+        self.chat_id = update.message.chat_id
         file = update.message.document.file_id
         filename = update.message.document.file_name
         obj = context.bot.get_file(file)
@@ -242,6 +276,8 @@ class Admin(MainBot):
         self.dictionary_maths['solution_maths'] = 'solutions/' + filename
         self.dictionary_physics['solution_physics'] = 'solutions/' + filename
         self.dp.handlers[1].clear()
+
+        # открываем соединение с базой данных
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
         if self.subj == 'M':
@@ -269,7 +305,9 @@ class Admin(MainBot):
             session.commit()
         self.bot.sendMessage(chat_id=self.chat_id, text='Успешно добавлено в базу данных!')
 
+    # для просмотра названия, id и так далее, последней добавленной задачи
     def for_see_lastest_addition_maths(self, update, _):
+        self.chat_id = update.message.chat_id
         try:
             db_session.global_init("db/bot_db.db")
             session = db_session.create_session()
@@ -278,7 +316,9 @@ class Admin(MainBot):
         except IndexError:
             self.bot.sendMessage(chat_id=self.chat_id, text='В базе данных нет ни одного задания по математике')
 
+    # тоже самое что и в предыдущей функции, но только для физики
     def for_see_lastest_addition_physics(self, update, _):
+        self.chat_id = update.message.chat_id
         try:
             db_session.global_init("db/bot_db.db")
             session = db_session.create_session()
@@ -287,15 +327,61 @@ class Admin(MainBot):
         except IndexError:
             self.bot.sendMessage(chat_id=self.chat_id, text='В базе данных нет ни одного задания по физике')
 
+    # функции для отправки сообщения админом через бот, какому-нибудь другом пользователю
+    def send_message_user_func(self, update, _):
+        self.chat_id = update.message.chat_id
+        self.bot.sendMessage(chat_id=self.chat_id, text='Введите id пользователя, которому хотите отправить сообщение')
+        update.message.text = ''
+        self.dp.add_handler(MessageHandler(Filters.text, self.send_mes_func_text), group=1)
+
+    def send_mes_func_text(self, update, _):
+        self.u_id = update.message.text
+        if self.u_id:
+            self.dp.handlers[1].clear()
+            self.bot.sendMessage(chat_id=update.message.chat_id, text='Теперь отправьте текст')
+            self.dp.add_handler(MessageHandler(Filters.text, self.send_mes_func), group=1)
+
+    def send_mes_func(self, update, _):
+        self.text = update.message.text
+        self.dp.handlers[1].clear()
+        self.bot.sendMessage(chat_id=self.u_id, text=self.text)
+        self.bot.sendMessage(chat_id=update.message.chat_id, text='Успешно отправлено пользователю!')
+
+    def send_message_users_func_text(self, update, _):
+        self.bot.sendMessage(chat_id=update.message.chat_id, text='Отправьте текст')
+        update.message.text = ''
+        self.dp.add_handler(MessageHandler(Filters.text, self.send_message_users_func), group=1)
+
+    def send_message_users_func(self, update, _):
+        spisok = []
+        self.text_asnwer = update.message.text
+        if self.text_asnwer:
+            self.dp.handlers[1].clear()
+            db_session.global_init("db/bot_db.db")
+            session = db_session.create_session()
+            # добавление всех id из бд в список
+            for i in session.query(BotUser).filter(BotUser.id_username):
+                spisok.append(i)
+            # отправка всем пользователям бота сообщения, которое отправил админ боту
+            for i in spisok:
+                self.bot.sendMessage(chat_id=int(str(i)), text=self.text_asnwer)
+            self.bot.sendMessage(chat_id=update.message.chat_id, text='Успешно отправлено пользователям!')
+
+    # главная функция для данного класса
     def admin_main(self):
+        # регистрация обработчиков
         self.dp.add_handler(CommandHandler('new_task', self.create_new_task))
         self.dp.add_handler(CommandHandler('see_the_latest_addition_maths', self.for_see_lastest_addition_maths))
         self.dp.add_handler(CommandHandler('see_the_latest_addition_physics', self.for_see_lastest_addition_physics))
+        self.dp.add_handler(CommandHandler('send_message_user', self.send_message_user_func))
+        self.dp.add_handler(CommandHandler('send_message_users', self.send_message_users_func_text))
 
         text_for_admin = 'Команды для управления ботом от имени администратора:\n' \
                          '/new_task - для создания нового задания и добавления его в базу данных\n' \
                          '/see_the_latest_addition_maths - для просмотра последней добавленной задачи в раздел ' \
                          'математика\n' \
                          '/see_the_latest_addition_physics - для просмотра последней добавленной задачи в раздел ' \
-                         'физика'
+                         'физика\n' \
+                         '/send_message_user - для отправки сообщения ОДНОМУ конкретному пользователю\n' \
+                         '/send_message_users - для отправки сообщения ВСЕМ пользователям'
         self.bot.sendMessage(chat_id=self.chat_id, text=text_for_admin)

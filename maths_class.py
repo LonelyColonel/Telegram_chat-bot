@@ -9,8 +9,9 @@ from data.maths_tasks import MathsTasks
 from maths_dictionaries import global_slovar, slovar, slovar_names
 
 
+# класс математики
 class Maths(MainBot):
-    def __init__(self, token, bot, chat_id, dp):
+    def __init__(self, token, chat_id, dp, bot):
         super().__init__(token)
         self.bot = bot
         self.chat_id = chat_id
@@ -49,10 +50,12 @@ class Maths(MainBot):
         self.bot.sendMessage(chat_id=self.chat_id, reply_markup=reply_markup, text='Темы')
 
     def common_handler_function(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         query = update.callback_query
         variant = query.data
         query.answer()
         query.delete_message()
+        print(update.callback_query.message.chat.id)
 
         theme_for_text = self.slovar_names[variant]
         trig_btns = self.global_slovar[f'{theme_for_text}']
@@ -69,15 +72,15 @@ class Maths(MainBot):
         for i in theme:
             self.dp.add_handler(CallbackQueryHandler(self.for_send_tasks, pattern=f'{i}'))
 
+    # функция для отправки решений
     def for_send_tasks(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         query = update.callback_query
         variant = query.data
         query.answer()
         query.delete_message()
-        print(variant)
         db_session.global_init("db/bot_db.db")
         session = db_session.create_session()
-        # self.spisok_tasks = []
         with open('Json_data/' + str(self.chat_id) + '.json') as file:
             data = json.load(file)
         for i in session.query(MathsTasks).filter(MathsTasks.undertheme_maths == f'{variant}',
@@ -96,6 +99,7 @@ class Maths(MainBot):
         self.dp.add_handler(MessageHandler(Filters.text, self.answer_handler), group=1)
 
     def answer_handler(self, update, _):
+        self.chat_id = update.message.chat_id
         answer = update.message.text
         if answer in ['Разделы', 'Помощь/О боте', 'Обратная связь']:
             self.dp.handlers[1].clear()
@@ -129,6 +133,7 @@ class Maths(MainBot):
         self.spisok_tasks.clear()
 
     def true_answer(self, update, _):
+        self.chat_id = update.callback_query.message.chat.id
         update.callback_query.delete_message()
         with open('Json_data/' + str(self.chat_id) + '.json') as file:
             data = json.load(file)
